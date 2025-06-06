@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package currency;
+
+option go_package = "currency_service/proto;currency_v1";
+
+service CurrencyService {
+  rpc GetExchangeRate(ExchangeRateRequest) returns (ExchangeRateResponse) {}
+}
+
+message ExchangeRateRequest {
+  string currency_name = 1;
+}
+
+
+message ExchangeRateResponse {
+  string currency_name = 1;
+  double rate = 2;
+  string timestamp = 3;
+}

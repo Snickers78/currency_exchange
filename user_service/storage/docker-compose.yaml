@@ -1,0 +1,12 @@
+services:
+  postgres:
+    container_name: postgres_user_service
+    image: postgres:16.4
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: qwerty
+      PGDATA: /data/postgres
+    volumes: 
+      - ./postgres-data:/data/postgres
+    ports:
+      - "5432:5432"
