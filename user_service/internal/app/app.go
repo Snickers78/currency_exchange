@@ -1,10 +1,10 @@
 package app
 
 import (
-	"currency-exchange/user_service/internal/app/grpcapp"
-	authgrpc "currency-exchange/user_service/internal/grpc/auth"
 	"log/slog"
 	"time"
+	"user_service/internal/app/grpcapp"
+	authgrpc "user_service/internal/grpc/auth"
 )
 
 type App struct {

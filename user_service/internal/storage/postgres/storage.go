@@ -2,11 +2,11 @@ package storage
 
 import (
 	"context"
-	errs "currency-exchange/user_service/internal/domain/errors"
-	"currency-exchange/user_service/internal/domain/model"
 	"database/sql"
 	"errors"
 	"log"
+	errs "user_service/internal/domain/errors"
+	"user_service/internal/domain/model"
 
 	_ "github.com/lib/pq"
 )

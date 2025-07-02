@@ -1,10 +1,10 @@
 package tests
 
 import (
-	ssov1 "currency-exchange/user_service/gen"
-	"currency-exchange/user_service/test/suite"
 	"testing"
 	"time"
+	ssov1 "user_service/gen"
+	"user_service/test/suite"
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/golang-jwt/jwt/v5"

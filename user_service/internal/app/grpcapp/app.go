@@ -1,10 +1,10 @@
 package grpcapp
 
 import (
-	authgrpc "currency-exchange/user_service/internal/grpc/auth"
 	"fmt"
 	"log/slog"
 	"net"
+	authgrpc "user_service/internal/grpc/auth"
 
 	"google.golang.org/grpc"
 )

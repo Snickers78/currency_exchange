@@ -2,10 +2,10 @@ package auth
 
 import (
 	"context"
-	ssov1 "currency-exchange/user_service/gen"
-	errs "currency-exchange/user_service/internal/domain/errors"
-	"currency-exchange/user_service/internal/lib/validate"
 	"errors"
+	ssov1 "user_service/gen"
+	errs "user_service/internal/domain/errors"
+	"user_service/internal/lib/validate"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

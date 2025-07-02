@@ -1,1 +1,3 @@
-./user_service/config/.env
+user_service/config/.env
+exchange_service/config/.env
+api_gateway/config/.env

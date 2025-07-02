@@ -2,11 +2,11 @@ package suite
 
 import (
 	"context"
-	ssov1 "currency-exchange/user_service/gen"
-	"currency-exchange/user_service/internal/config"
 	"net"
 	"strconv"
 	"testing"
+	ssov1 "user_service/gen"
+	"user_service/internal/config"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

@@ -1,9 +1,9 @@
 package jwt
 
 import (
-	"currency-exchange/user_service/internal/domain/model"
 	"fmt"
 	"time"
+	"user_service/internal/domain/model"
 
 	"github.com/golang-jwt/jwt/v5"
 )
