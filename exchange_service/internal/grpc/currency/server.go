@@ -3,8 +3,9 @@ package currency
 import (
 	"context"
 	proto "exchange_service/gen/proto"
-	"fmt"
 	"time"
+
+	currencyErrors "exchange_service/internal/services"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -27,12 +28,23 @@ func Register(gRPC *grpc.Server, exchanger Exchanger) {
 
 func (s *Server) GetExchangeRate(ctx context.Context, req *proto.ExchangeRateRequest) (*proto.ExchangeRateResponse, error) {
 	rate, ts, err := s.exchanger.GetExchangeRate(ctx, req.BaseCurrency, req.TargetCurrency)
-	if rate == 0 {
-		return nil, status.Error(codes.NotFound, "currency not found")
-	}
 	if err != nil {
-		fmt.Println("Error getting exchange rate: ", err)
-		return nil, status.Error(codes.Internal, "internal error")
+		switch err {
+		case currencyErrors.ErrCurrencyNotFound:
+			return nil, status.Error(codes.NotFound, "currency not found")
+		case currencyErrors.ErrInternalServer:
+			return nil, status.Error(codes.Internal, "internal error")
+		case currencyErrors.ErrUnsupportedCode:
+			return nil, status.Error(codes.InvalidArgument, "unsupported currency code")
+		case currencyErrors.ErrMalformedRequest:
+			return nil, status.Error(codes.InvalidArgument, "malformed request")
+		case currencyErrors.ErrInvalidKey:
+			return nil, status.Error(codes.Internal, "internal error")
+		case currencyErrors.ErrUnknownCode:
+			return nil, status.Error(codes.InvalidArgument, "unknown currency code")
+		default:
+			return nil, status.Error(codes.Internal, "internal error")
+		}
 	}
 
 	return &proto.ExchangeRateResponse{
@@ -43,15 +55,27 @@ func (s *Server) GetExchangeRate(ctx context.Context, req *proto.ExchangeRateReq
 }
 
 func (s *Server) Exchange(ctx context.Context, req *proto.ExchangeRequest) (*proto.ExchangeResponse, error) {
-	if req.Amount == 0 {
+	if req.Amount <= 0 {
 		return nil, status.Error(codes.InvalidArgument, "amount must be greater than 0")
 	}
 	exchange_amount, ts, err := s.exchanger.Exchange(ctx, req.BaseCurrency, req.TargetCurrency, req.Amount)
-	if exchange_amount == 0 {
-		return nil, status.Error(codes.NotFound, "currency not found")
-	}
 	if err != nil {
-		return nil, status.Error(codes.Internal, "internal error")
+		switch err {
+		case currencyErrors.ErrCurrencyNotFound:
+			return nil, status.Error(codes.NotFound, "currency not found")
+		case currencyErrors.ErrInternalServer:
+			return nil, status.Error(codes.Internal, "internal error")
+		case currencyErrors.ErrUnsupportedCode:
+			return nil, status.Error(codes.InvalidArgument, "unsupported currency code")
+		case currencyErrors.ErrMalformedRequest:
+			return nil, status.Error(codes.InvalidArgument, "malformed request")
+		case currencyErrors.ErrInvalidKey:
+			return nil, status.Error(codes.Internal, "internal error")
+		case currencyErrors.ErrUnknownCode:
+			return nil, status.Error(codes.InvalidArgument, "unknown currency code")
+		default:
+			return nil, status.Error(codes.Internal, "internal error")
+		}
 	}
 
 	return &proto.ExchangeResponse{

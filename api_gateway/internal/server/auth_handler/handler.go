@@ -1,12 +1,11 @@
 package handler
 
 import (
+	"api_gateway/infra/kafka"
 	"api_gateway/internal/auth"
 	ssov1 "api_gateway/internal/gen/auth/proto"
-	"api_gateway/internal/kafka"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,25 +15,19 @@ type Auth struct {
 	hook       *kafka.KafkaHook
 }
 
-func NewAuthHandler(router *gin.Engine, authClient *auth.AuthClient, hook *kafka.KafkaHook) *Auth {
+func NewAuthHandler(router *gin.Engine, authClient *auth.AuthClient, hook *kafka.KafkaHook) {
 	handler := &Auth{
 		authClient: authClient,
 		hook:       hook,
 	}
 	router.POST("/login", handler.Login)
 	router.POST("/register", handler.Register)
-	return handler
 }
 
 func (a *Auth) Login(c *gin.Context) {
 	var req loginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logEntry := AuthLog{
-			Level: "error",
-			Event: "login_invalid_request",
-			Error: err.Error(),
-			Time:  time.Now().Format(time.RFC3339),
-		}
+		logEntry := NewAuthLog("error", "login_invalid_request", WithAuthError(err.Error()))
 		if msg, err := json.Marshal(logEntry); err == nil {
 			a.hook.Fire(string(msg))
 		}
@@ -47,13 +40,7 @@ func (a *Auth) Login(c *gin.Context) {
 		Password: req.Password,
 	})
 	if err != nil {
-		logEntry := AuthLog{
-			Level: "error",
-			Event: "login_failed",
-			Email: req.Email,
-			Error: err.Error(),
-			Time:  time.Now().Format(time.RFC3339),
-		}
+		logEntry := NewAuthLog("error", "login_failed", WithAuthEmail(req.Email), WithAuthError(err.Error()))
 		if msg, err := json.Marshal(logEntry); err == nil {
 			a.hook.Fire(string(msg))
 		}
@@ -61,12 +48,7 @@ func (a *Auth) Login(c *gin.Context) {
 		return
 	}
 
-	logEntry := AuthLog{
-		Level: "info",
-		Event: "login_success",
-		Email: req.Email,
-		Time:  time.Now().Format(time.RFC3339),
-	}
+	logEntry := NewAuthLog("info", "login_success", WithAuthEmail(req.Email))
 	if msg, err := json.Marshal(logEntry); err == nil {
 		a.hook.Fire(string(msg))
 	}
@@ -76,12 +58,7 @@ func (a *Auth) Login(c *gin.Context) {
 func (a *Auth) Register(c *gin.Context) {
 	var req loginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logEntry := AuthLog{
-			Level: "error",
-			Event: "register_invalid_request",
-			Error: err.Error(),
-			Time:  time.Now().Format(time.RFC3339),
-		}
+		logEntry := NewAuthLog("error", "register_invalid_request", WithAuthError(err.Error()))
 		if msg, err := json.Marshal(logEntry); err == nil {
 			a.hook.Fire(string(msg))
 		}
@@ -94,13 +71,7 @@ func (a *Auth) Register(c *gin.Context) {
 		Password: req.Password,
 	})
 	if err != nil {
-		logEntry := AuthLog{
-			Level: "error",
-			Event: "register_failed",
-			Email: req.Email,
-			Error: err.Error(),
-			Time:  time.Now().Format(time.RFC3339),
-		}
+		logEntry := NewAuthLog("error", "register_failed", WithAuthEmail(req.Email), WithAuthError(err.Error()))
 		if msg, err := json.Marshal(logEntry); err == nil {
 			a.hook.Fire(string(msg))
 		}
@@ -108,22 +79,10 @@ func (a *Auth) Register(c *gin.Context) {
 		return
 	}
 
-	logEntry := AuthLog{
-		Level:  "info",
-		Event:  "register_success",
-		Email:  req.Email,
-		UserID: resp.GetUserId(),
-		Time:   time.Now().Format(time.RFC3339),
-	}
+	logEntry := NewAuthLog("info", "register_success", WithAuthEmail(req.Email), WithAuthUserID(resp.GetUserId()))
 	if msg, err := json.Marshal(logEntry); err == nil {
 		if err := a.hook.Fire(string(msg)); err != nil {
-			errLog := AuthLog{
-				Level:  "error",
-				Event:  "register_kafka_error",
-				UserID: resp.GetUserId(),
-				Error:  err.Error(),
-				Time:   time.Now().Format(time.RFC3339),
-			}
+			errLog := NewAuthLog("error", "register_kafka_error", WithAuthUserID(resp.GetUserId()), WithAuthError(err.Error()))
 			if emsg, e := json.Marshal(errLog); e == nil {
 				a.hook.Fire(string(emsg))
 			}

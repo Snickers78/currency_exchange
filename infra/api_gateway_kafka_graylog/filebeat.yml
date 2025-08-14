@@ -1,0 +1,18 @@
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /var/log/application/logs.txt
+  fields:
+    app_name: exchange_service
+    env: development
+  fields_under_root: true
+
+processors:
+- add_host_metadata:
+    when.not.contains.tags: forwarded
+
+output.logstash:
+  hosts: ["graylog:5044"]
+
+logging.level: info 

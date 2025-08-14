@@ -1,4 +1,4 @@
-package logger
+package logg
 
 import (
 	"log/slog"
@@ -8,18 +8,23 @@ import (
 func InitLogger(env string) *slog.Logger {
 	var log *slog.Logger
 
+	file, err := os.OpenFile("logs.txt", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Error("Не удалось открыть файл для логирования", err)
+	}
+
 	switch env {
 	case "local":
 		log = slog.New(
-			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}),
+			slog.NewTextHandler(file, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}),
 		)
 	case "dev":
 		log = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+			slog.NewJSONHandler(file, &slog.HandlerOptions{Level: slog.LevelDebug}),
 		)
 	case "prod":
 		log = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
+			slog.NewJSONHandler(file, &slog.HandlerOptions{Level: slog.LevelInfo}),
 		)
 	}
 

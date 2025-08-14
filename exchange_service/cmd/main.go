@@ -1,10 +1,10 @@
 package main
 
 import (
+	"exchange_service/infra/metrics"
 	"exchange_service/internal/app"
 	"exchange_service/internal/config"
-	"exchange_service/internal/lib/logger"
-	"exchange_service/internal/metrics"
+	logg "exchange_service/internal/lib/logger"
 	currency "exchange_service/internal/services"
 	"os"
 	"os/signal"
@@ -15,12 +15,15 @@ const (
 	EnvLocal = "local"
 	EnvDev   = "dev"
 	EnvProd  = "prod"
+	//topic    = "logs"
 )
 
 func main() {
 	cfg := config.LoadConfig()
-	logger := logger.InitLogger(EnvLocal)
-	exchanger := currency.NewExchanger(logger, cfg)
+	//brokers := []string{cfg.Broker1, cfg.Broker2}
+	//kafkaHook := kafka.NewKafkaHook(brokers, topic)
+	logger := logg.InitLogger(EnvLocal)
+	exchanger := currency.NewExchanger(cfg, logger)
 	application := app.New(logger, cfg.Port, exchanger)
 	metricsApp := metrics.NewMetricsApp()
 	go application.GRPCSrv.Run()
@@ -31,7 +34,7 @@ func main() {
 
 	<-stop
 
-	application.GRPCSrv.Stop()
 	metricsApp.Stop()
+	application.GRPCSrv.Stop()
 	logger.Info("Application stopped")
 }

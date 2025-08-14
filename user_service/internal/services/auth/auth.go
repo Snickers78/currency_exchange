@@ -2,23 +2,25 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"time"
+	"user_service/infra/metrics"
 	"user_service/internal/config"
 	errs "user_service/internal/domain/errors"
 	"user_service/internal/domain/model"
 	"user_service/internal/lib/jwt"
-	"user_service/internal/metrics"
+	"user_service/internal/lib/logger"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Auth struct {
 	config   *config.Config
-	log      *slog.Logger
 	storage  Storage
 	tokenTTL time.Duration
+	logger   *slog.Logger
 }
 
 type Storage interface {
@@ -27,37 +29,51 @@ type Storage interface {
 }
 
 // New returns new instance of Auth
-func NewAuthService(log *slog.Logger, storage Storage, tokenTTL time.Duration, config *config.Config) *Auth {
-	return &Auth{log: log,
+func NewAuthService(storage Storage, tokenTTL time.Duration, config *config.Config, logger *slog.Logger) *Auth {
+	return &Auth{
 		storage:  storage,
 		tokenTTL: tokenTTL,
 		config:   config,
+		logger:   logger,
 	}
 }
 
 func (a *Auth) Login(ctx context.Context, email, password string) (string, error) {
 	metrics.RequestCount.Inc()
 	start := time.Now()
+
 	user, err := a.storage.GetUser(ctx, email)
 	if err != nil {
 		if errors.Is(err, errs.UserNotFound) {
-			a.log.Warn("Cannot login user: wrong credentials")
+			logEntry := logger.NewAuthLog("error", "login_wrong_credentials", logger.WithAuthEmail(email), logger.WithAuthError(errs.WrongCredentials.Error()))
+			if msg, err := json.Marshal(logEntry); err == nil {
+				a.logger.Error("error", "auth_service", string(msg))
+			}
 			metrics.ErrorCount.Inc()
 			return "", errs.WrongCredentials
 		}
-		a.log.Warn("Cannot get user: ", err)
+		logEntry := logger.NewAuthLog("error", "login_get_user_failed", logger.WithAuthEmail(email), logger.WithAuthError(err.Error()))
+		if msg, err := json.Marshal(logEntry); err == nil {
+			a.logger.Error("error", "auth_service", string(msg))
+		}
 		return "", errs.BadRequest
 	}
 
 	if err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(password)); err != nil {
-		a.log.Warn("Cannot login user: wrong credentials")
+		logEntry := logger.NewAuthLog("error", "login_wrong_credentials", logger.WithAuthEmail(email), logger.WithAuthError(errs.WrongCredentials.Error()))
+		if msg, err := json.Marshal(logEntry); err == nil {
+			a.logger.Error("error", "auth_service", string(msg))
+		}
 		metrics.ErrorCount.Inc()
 		return "", errs.WrongCredentials
 	}
 
 	token, err := jwt.NewToken(user, a.tokenTTL, a.config.Secret)
 	if err != nil {
-		a.log.Error("Failed to create token: ", err)
+		logEntry := logger.NewAuthLog("error", "login_token_failed", logger.WithAuthEmail(email), logger.WithAuthError(err.Error()))
+		if msg, err := json.Marshal(logEntry); err == nil {
+			a.logger.Error("error", "auth_service", string(msg))
+		}
 		metrics.ErrorCount.Inc()
 		return "", errs.InternalError
 	}
@@ -70,32 +86,46 @@ func (a *Auth) Login(ctx context.Context, email, password string) (string, error
 func (a *Auth) Register(ctx context.Context, email, password string) (int64, error) {
 	metrics.RequestCount.Inc()
 	start := time.Now()
+
 	user, err := a.storage.GetUser(ctx, email)
 	if err != nil {
 		if !errors.Is(err, errs.UserNotFound) {
-			a.log.Error("Failed to check if user exists: ", err)
+			logEntry := logger.NewAuthLog("error", "register_check_user_failed", logger.WithAuthEmail(email), logger.WithAuthError(err.Error()))
+			if msg, err := json.Marshal(logEntry); err == nil {
+				a.logger.Error("error", "auth_service", string(msg))
+			}
 			metrics.ErrorCount.Inc()
 			return 0, err
 		}
 	} else if user != nil {
-		a.log.Warn("Cannot register new user: user already exists", "email", email)
+		logEntry := logger.NewAuthLog("error", "register_user_exists", logger.WithAuthEmail(email), logger.WithAuthError(errs.UserAlreadyExists.Error()))
+		if msg, err := json.Marshal(logEntry); err == nil {
+			a.logger.Error("error", "auth_service", string(msg))
+		}
 		return 0, errs.UserAlreadyExists
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		a.log.Error("Failed to hash password: ", err)
+		logEntry := logger.NewAuthLog("error", "register_hash_failed", logger.WithAuthEmail(email), logger.WithAuthError(err.Error()))
+		if msg, err := json.Marshal(logEntry); err == nil {
+			a.logger.Error("error", "auth_service", string(msg))
+		}
 		metrics.ErrorCount.Inc()
 		return 0, err
 	}
 
 	uid, err := a.storage.CreateUser(ctx, email, hash)
 	if err != nil {
-		a.log.Error("Failed to create user: ", err)
+		logEntry := logger.NewAuthLog("error", "register_create_user_failed", logger.WithAuthEmail(email), logger.WithAuthError(err.Error()))
+		if msg, err := json.Marshal(logEntry); err == nil {
+			a.logger.Error("error", "auth_service", string(msg))
+		}
 		metrics.ErrorCount.Inc()
 		return 0, err
 	}
 
 	metrics.ResponseTimeSeconds.Observe(time.Since(start).Seconds())
+
 	return uid, nil
 }

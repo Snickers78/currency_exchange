@@ -4,10 +4,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"user_service/infra/metrics"
 	"user_service/internal/app"
 	"user_service/internal/config"
 	"user_service/internal/lib/logger"
-	"user_service/internal/metrics"
 	"user_service/internal/services/auth"
 	storage "user_service/internal/storage/postgres"
 )
@@ -22,7 +22,7 @@ func main() {
 	cfg := config.MustLoad()
 	logger := logger.InitLogger(EnvLocal)
 	storage := storage.NewStorage(cfg.StoragePath)
-	authService := auth.NewAuthService(logger, storage, cfg.TockenTTL, cfg)
+	authService := auth.NewAuthService(storage, cfg.TockenTTL, cfg, logger)
 	application := app.New(logger, cfg.Port, cfg.StoragePath, cfg.TockenTTL, authService)
 	metricsApp := metrics.NewMetricsApp()
 	go application.GRPCSrv.Run()
@@ -33,7 +33,7 @@ func main() {
 
 	<-stop
 
-	application.GRPCSrv.Stop()
 	metricsApp.Stop()
+	application.GRPCSrv.Stop()
 	logger.Info("Application stopped")
 }

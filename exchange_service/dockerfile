@@ -1,0 +1,15 @@
+FROM golang:1.23.2-alpine
+
+WORKDIR /exchange_service
+
+COPY go.mod ./
+
+RUN go mod download
+
+COPY . .
+
+RUN go build -o exchange-service ./cmd/main.go
+
+EXPOSE 50052
+
+CMD ["./exchange-service"]

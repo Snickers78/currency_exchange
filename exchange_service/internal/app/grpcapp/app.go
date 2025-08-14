@@ -26,6 +26,7 @@ func NewApp(log *slog.Logger, exchanger exchangegrpc.Exchanger, port int) *App {
 	)
 
 	exchangegrpc.Register(gRPCServer, exchanger)
+	grpc_prometheus.Register(gRPCServer)
 
 	return &App{log: log,
 		gRPCServer: gRPCServer,

@@ -4,6 +4,7 @@ import (
 	"api_gateway/internal/config"
 	ssov1 "api_gateway/internal/gen/auth/proto"
 	"context"
+	"log"
 	"net"
 	"strconv"
 
@@ -16,6 +17,15 @@ type AuthClient struct {
 }
 
 func NewAuthCLient(cfg *config.Config) *AuthClient {
+	// systemRoots, err := x509.SystemCertPool()
+	// if err != nil {
+	// 	return nil
+	// }
+
+	// tlsCreds := credentials.NewTLS(&tls.Config{
+	// 	RootCAs: systemRoots,
+	// })
+
 	conn, err := grpc.NewClient(net.JoinHostPort("localhost", strconv.Itoa(cfg.AuthServicePort)), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
@@ -27,9 +37,17 @@ func NewAuthCLient(cfg *config.Config) *AuthClient {
 }
 
 func (c *AuthClient) Login(ctx context.Context, req *ssov1.LoginRequest) (*ssov1.LoginResponse, error) {
-	return c.client.Login(ctx, req)
+	resp, err := c.client.Login(ctx, req)
+	if err != nil {
+		log.Println(err)
+	}
+	return resp, nil
 }
 
 func (c *AuthClient) Register(ctx context.Context, req *ssov1.RegisterRequest) (*ssov1.RegisterResponse, error) {
-	return c.client.Register(ctx, req)
+	resp, err := c.client.Register(ctx, req)
+	if err != nil {
+		log.Println(err)
+	}
+	return resp, nil
 }

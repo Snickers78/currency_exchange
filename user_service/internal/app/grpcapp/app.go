@@ -6,6 +6,8 @@ import (
 	"net"
 	authgrpc "user_service/internal/grpc/auth"
 
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+
 	"google.golang.org/grpc"
 )
 
@@ -16,9 +18,16 @@ type App struct {
 }
 
 func NewApp(log *slog.Logger, authService authgrpc.Auth, port int) *App {
-	gRPCServer := grpc.NewServer()
+	grpc_prometheus.EnableHandlingTimeHistogram()
+	grpc_prometheus.EnableClientHandlingTimeHistogram()
+
+	gRPCServer := grpc.NewServer(
+		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
+	)
 
 	authgrpc.Register(gRPCServer, authService)
+	grpc_prometheus.Register(gRPCServer)
 
 	return &App{log: log,
 		gRPCServer: gRPCServer,

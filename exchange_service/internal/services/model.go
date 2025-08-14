@@ -10,6 +10,7 @@ type exchangeRateAPIResponse struct {
 	TimeNextUpdateUTC  string             `json:"time_next_update_utc"`
 	BaseCode           string             `json:"base_code"`
 	Rates              map[string]float64 `json:"conversion_rates"`
+	ErrorType          string             `json:"error-type,omitempty"`
 }
 
 type exchangeCurrencyAPIResponse struct {
@@ -24,4 +25,5 @@ type exchangeCurrencyAPIResponse struct {
 	TargetCode         string  `json:"target_code"`
 	ConversionRate     float64 `json:"conversion_rate"`
 	ConversionResult   float64 `json:"conversion_result"`
+	ErrorType          string  `json:"error-type,omitempty"`
 }

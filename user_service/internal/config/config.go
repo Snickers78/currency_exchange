@@ -13,10 +13,12 @@ type Config struct {
 	Secret      string        `env:"secret" env-required:"true"`
 	Port        int           `env:"port"`
 	Timeout     time.Duration `env:"timeout"`
+	Broker1     string        `env:"broker1"`
+	Broker2     string        `env:"broker2"`
 }
 
 func MustLoad() *Config {
-	path := "D:/currency-exchange/user_service/config/.env"
+	path := "./config/.env"
 	var config Config
 	if err := cleanenv.ReadConfig(path, &config); err != nil {
 		panic("Cannot read config: " + err.Error())

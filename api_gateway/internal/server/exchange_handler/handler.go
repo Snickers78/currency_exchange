@@ -1,12 +1,11 @@
 package handler
 
 import (
+	"api_gateway/infra/kafka"
 	"api_gateway/internal/exchange"
 	exchangev1 "api_gateway/internal/gen/exchange/proto"
-	"api_gateway/internal/kafka"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,27 +15,19 @@ type Exchange struct {
 	hook           *kafka.KafkaHook
 }
 
-func NewExchangeHandler(router *gin.Engine, exchangeClient *exchange.ExchangeClient, hook *kafka.KafkaHook) *Exchange {
+func NewExchangeHandler(router *gin.Engine, exchangeClient *exchange.ExchangeClient, hook *kafka.KafkaHook) {
 	handler := &Exchange{
 		exchangeClient: exchangeClient,
 		hook:           hook,
 	}
 	router.POST("/exchange/rate", handler.GetExchangeRate)
 	router.POST("/exchange", handler.Exchange)
-	return handler
 }
 
 func (e *Exchange) GetExchangeRate(c *gin.Context) {
 	var req rateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logEntry := ExchangeLog{
-			Level:          "error",
-			Event:          "rate_invalid_request",
-			BaseCurrency:   req.BaseCurrency,
-			TargetCurrency: req.TargetCurrency,
-			Error:          err.Error(),
-			Time:           time.Now().Format(time.RFC3339),
-		}
+		logEntry := NewExchangeLog("error", "rate_invalid_request", WithBaseCurrency(req.BaseCurrency), WithTargetCurrency(req.TargetCurrency), WithExchangeError(err.Error()))
 		if msg, err := json.Marshal(logEntry); err == nil {
 			e.hook.Fire(string(msg))
 		}
@@ -49,14 +40,7 @@ func (e *Exchange) GetExchangeRate(c *gin.Context) {
 		TargetCurrency: req.TargetCurrency,
 	})
 	if err != nil {
-		logEntry := ExchangeLog{
-			Level:          "error",
-			Event:          "rate_grpc_failed",
-			BaseCurrency:   req.BaseCurrency,
-			TargetCurrency: req.TargetCurrency,
-			Error:          err.Error(),
-			Time:           time.Now().Format(time.RFC3339),
-		}
+		logEntry := NewExchangeLog("error", "rate_grpc_failed", WithBaseCurrency(req.BaseCurrency), WithTargetCurrency(req.TargetCurrency), WithExchangeError(err.Error()))
 		if msg, err := json.Marshal(logEntry); err == nil {
 			e.hook.Fire(string(msg))
 		}
@@ -64,15 +48,7 @@ func (e *Exchange) GetExchangeRate(c *gin.Context) {
 		return
 	}
 
-	logEntry := ExchangeLog{
-		Level:          "info",
-		Event:          "rate_success",
-		BaseCurrency:   req.BaseCurrency,
-		TargetCurrency: req.TargetCurrency,
-		Rate:           resp.Rate,
-		CurrencyName:   resp.CurrencyName,
-		Time:           time.Now().Format(time.RFC3339),
-	}
+	logEntry := NewExchangeLog("info", "rate_success", WithBaseCurrency(req.BaseCurrency), WithTargetCurrency(req.TargetCurrency), WithRate(resp.Rate), WithCurrencyName(resp.CurrencyName))
 	if msg, err := json.Marshal(logEntry); err == nil {
 		e.hook.Fire(string(msg))
 	}
@@ -87,15 +63,7 @@ func (e *Exchange) GetExchangeRate(c *gin.Context) {
 func (e *Exchange) Exchange(c *gin.Context) {
 	var req exchangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logEntry := ExchangeLog{
-			Level:          "error",
-			Event:          "exchange_invalid_request",
-			BaseCurrency:   req.BaseCurrency,
-			TargetCurrency: req.TargetCurrency,
-			Amount:         req.Amount,
-			Error:          err.Error(),
-			Time:           time.Now().Format(time.RFC3339),
-		}
+		logEntry := NewExchangeLog("error", "exchange_invalid_request", WithBaseCurrency(req.BaseCurrency), WithTargetCurrency(req.TargetCurrency), WithAmount(req.Amount), WithExchangeError(err.Error()))
 		if msg, err := json.Marshal(logEntry); err == nil {
 			e.hook.Fire(string(msg))
 		}
@@ -109,15 +77,7 @@ func (e *Exchange) Exchange(c *gin.Context) {
 		Amount:         req.Amount,
 	})
 	if err != nil {
-		logEntry := ExchangeLog{
-			Level:          "error",
-			Event:          "exchange_grpc_failed",
-			BaseCurrency:   req.BaseCurrency,
-			TargetCurrency: req.TargetCurrency,
-			Amount:         req.Amount,
-			Error:          err.Error(),
-			Time:           time.Now().Format(time.RFC3339),
-		}
+		logEntry := NewExchangeLog("error", "exchange_grpc_failed", WithBaseCurrency(req.BaseCurrency), WithTargetCurrency(req.TargetCurrency), WithAmount(req.Amount), WithExchangeError(err.Error()))
 		if msg, err := json.Marshal(logEntry); err == nil {
 			e.hook.Fire(string(msg))
 		}
@@ -125,15 +85,7 @@ func (e *Exchange) Exchange(c *gin.Context) {
 		return
 	}
 
-	logEntry := ExchangeLog{
-		Level:          "info",
-		Event:          "exchange_success",
-		BaseCurrency:   req.BaseCurrency,
-		TargetCurrency: req.TargetCurrency,
-		Amount:         resp.Amount,
-		CurrencyName:   resp.Currency,
-		Time:           time.Now().Format(time.RFC3339),
-	}
+	logEntry := NewExchangeLog("info", "exchange_success", WithBaseCurrency(req.BaseCurrency), WithTargetCurrency(req.TargetCurrency), WithAmount(resp.Amount), WithCurrencyName(resp.Currency))
 	if msg, err := json.Marshal(logEntry); err == nil {
 		e.hook.Fire(string(msg))
 	}
