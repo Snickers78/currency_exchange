@@ -4,6 +4,7 @@ import (
 	"api_gateway/infra/kafka"
 	"api_gateway/internal/exchange"
 	exchangev1 "api_gateway/internal/gen/exchange/proto"
+	"api_gateway/internal/middleware"
 	"encoding/json"
 	"net/http"
 
@@ -15,13 +16,17 @@ type Exchange struct {
 	hook           *kafka.KafkaHook
 }
 
-func NewExchangeHandler(router *gin.Engine, exchangeClient *exchange.ExchangeClient, hook *kafka.KafkaHook) {
+func NewExchangeHandler(router *gin.Engine, exchangeClient *exchange.ExchangeClient, hook *kafka.KafkaHook, secret string) {
 	handler := &Exchange{
 		exchangeClient: exchangeClient,
 		hook:           hook,
 	}
-	router.POST("/exchange/rate", handler.GetExchangeRate)
-	router.POST("/exchange", handler.Exchange)
+
+	protected := router.Group("/exchange")
+	protected.Use(middleware.IsAuthed(secret))
+
+	protected.POST("/rate", handler.GetExchangeRate)
+	protected.POST("/", handler.Exchange)
 }
 
 func (e *Exchange) GetExchangeRate(c *gin.Context) {

@@ -4,6 +4,7 @@ import (
 	"api_gateway/infra/kafka"
 	"api_gateway/internal/auth"
 	ssov1 "api_gateway/internal/gen/auth/proto"
+	"api_gateway/internal/middleware"
 	"encoding/json"
 	"net/http"
 
@@ -15,12 +16,16 @@ type Auth struct {
 	hook       *kafka.KafkaHook
 }
 
-func NewAuthHandler(router *gin.Engine, authClient *auth.AuthClient, hook *kafka.KafkaHook) {
+func NewAuthHandler(router *gin.Engine, authClient *auth.AuthClient, hook *kafka.KafkaHook, secret string) {
 	handler := &Auth{
 		authClient: authClient,
 		hook:       hook,
 	}
-	router.POST("/login", handler.Login)
+
+	protected := router.Group("/login")
+	protected.Use(middleware.IsAuthed(secret))
+
+	protected.POST("/", handler.Login)
 	router.POST("/register", handler.Register)
 }
 

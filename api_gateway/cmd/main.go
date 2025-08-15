@@ -8,6 +8,8 @@ import (
 	"api_gateway/internal/middleware"
 	authHandler "api_gateway/internal/server/auth_handler"
 	exchangeHandler "api_gateway/internal/server/exchange_handler"
+	"context"
+	"time"
 
 	//"context"
 	"log"
@@ -33,7 +35,7 @@ var (
 
 func main() {
 	//redisConnect := infraRedis.NewRedisCLient("localhost:6379")
-	//rateLimiter := middleware.NewBucketLimiter(context.Background(), 100, 1*time.Second)
+	rateLimiter := middleware.NewBucketLimiter(context.Background(), 100, 1*time.Second)
 	router := gin.Default()
 	cfg := config.LoadConfig()
 	// log := logger.InitLogger(EnvLocal)
@@ -45,11 +47,11 @@ func main() {
 
 	//middleware
 	router.Use(middleware.CORS())
-	//router.Use(middleware.RateLimitMiddleware(rateLimiter))
+	router.Use(middleware.RateLimitMiddleware(rateLimiter))
 
 	//handlers
-	authHandler.NewAuthHandler(router, authClient, kafkaHook)
-	exchangeHandler.NewExchangeHandler(router, exchangeClient, kafkaHook)
+	authHandler.NewAuthHandler(router, authClient, kafkaHook, cfg.Secret)
+	exchangeHandler.NewExchangeHandler(router, exchangeClient, kafkaHook, cfg.Secret)
 
 	if err := router.Run(":" + strconv.Itoa(cfg.GatewayPort)); err != nil {
 		log.Fatal("Failed to start server", "err", err)
