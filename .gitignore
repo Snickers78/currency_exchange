@@ -2,3 +2,6 @@ user_service/config/.env
 exchange_service/config/.env
 api_gateway/config/.env
 .vscode/
+exchange_service/logs.txt
+infra/api_gateway_kafka_graylog/connect-plugins
+infra/api_gateway_kafka_graylog/data

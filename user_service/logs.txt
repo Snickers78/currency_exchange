@@ -1,0 +1,5 @@
+time=2025-08-15T20:25:39.222+03:00 level=INFO source=D:/currency-exchange/user_service/internal/app/grpcapp/app.go:44 msg="GRPC server listening" port=[::]:50051
+time=2025-08-15T20:30:05.341+03:00 level=ERROR source=D:/currency-exchange/user_service/internal/services/auth/auth.go:95 msg=error auth_service="{\"level\":\"error\",\"event\":\"register_check_user_failed\",\"email\":\"zhopa123@yandex.ru\",\"error\":\"pq: relation \\\"users\\\" does not exist\",\"time\":\"2025-08-15T20:30:05+03:00\"}"
+time=2025-08-15T20:45:28.680+03:00 level=INFO source=D:/currency-exchange/user_service/internal/app/grpcapp/app.go:54 msg="Stopping GRPC server" port=50051
+time=2025-08-15T20:45:28.681+03:00 level=INFO source=D:/currency-exchange/user_service/cmd/sso/main.go:38 msg="Application stopped"
+time=2025-08-15T20:45:34.368+03:00 level=INFO source=D:/currency-exchange/user_service/internal/app/grpcapp/app.go:44 msg="GRPC server listening" port=[::]:50051
