@@ -16,7 +16,7 @@ type AuthClient struct {
 	client ssov1.AuthClient
 }
 
-func NewAuthCLient(cfg *config.Config) *AuthClient {
+func NewAuthClient(cfg *config.Config) *AuthClient {
 	// systemRoots, err := x509.SystemCertPool()
 	// if err != nil {
 	// 	return nil

@@ -12,6 +12,8 @@ import (
 )
 
 const (
+	Test     = true
+	App      = false
 	EnvLocal = "local"
 	EnvDev   = "dev"
 	EnvProd  = "prod"
@@ -19,7 +21,7 @@ const (
 )
 
 func main() {
-	cfg := config.LoadConfig()
+	cfg := config.LoadConfig(App)
 	//brokers := []string{cfg.Broker1, cfg.Broker2}
 	//kafkaHook := kafka.NewKafkaHook(brokers, topic)
 	logger := logg.InitLogger(EnvLocal)

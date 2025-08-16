@@ -14,11 +14,15 @@ type Config struct {
 	Broker2 string        `env:"BROKER2"`
 }
 
-func LoadConfig() *Config {
-	// configPath := flag.String("config", "", "Path to config file")
-	// flag.Parse()
+func LoadConfig(isTest bool) *Config {
+	var path string
+	switch isTest {
+	case true:
+		path = "d://currency-exchange/exchange_service/config/.env"
+	default:
+		path = "./config/.env"
+	}
 
-	path := "./config/.env"
 	var config Config
 	if err := cleanenv.ReadConfig(path, &config); err != nil {
 		panic("Cannot read config: " + err.Error())

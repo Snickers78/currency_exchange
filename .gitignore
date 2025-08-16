@@ -5,3 +5,5 @@ api_gateway/config/.env
 exchange_service/logs.txt
 infra/api_gateway_kafka_graylog/connect-plugins
 infra/api_gateway_kafka_graylog/data
+user_service/logs.txt
+user_service/storage/postgres-data

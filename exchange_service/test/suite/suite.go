@@ -5,12 +5,15 @@ import (
 	currency_v1 "exchange_service/gen/proto"
 	"exchange_service/internal/config"
 	"net"
-	"os"
 	"strconv"
 	"testing"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+)
+
+const (
+	Test = true
 )
 
 type Suite struct {
@@ -23,8 +26,7 @@ func NewSuite(t *testing.T) (context.Context, *Suite) {
 	t.Helper()
 	t.Parallel()
 
-	os.Setenv("CONFIG_PATH", "d:/currency-exchange/exchange_service/config/.env")
-	cfg := config.LoadConfig()
+	cfg := config.LoadConfig(Test)
 
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
 

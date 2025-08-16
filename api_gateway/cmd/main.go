@@ -27,6 +27,7 @@ const (
 	// EnvDev   = "dev"
 	// EnvProd  = "prod"
 	topic = "logs"
+	App   = false
 )
 
 var (
@@ -37,12 +38,12 @@ func main() {
 	//redisConnect := infraRedis.NewRedisCLient("localhost:6379")
 	rateLimiter := middleware.NewBucketLimiter(context.Background(), 100, 1*time.Second)
 	router := gin.Default()
-	cfg := config.LoadConfig()
+	cfg := config.LoadConfig(App)
 	// log := logger.InitLogger(EnvLocal)
 	kafkaHook := kafka.NewKafkaHook(brokers, topic)
 
 	//clients
-	authClient := auth.NewAuthCLient(cfg)
+	authClient := auth.NewAuthClient(cfg)
 	exchangeClient := exchange.NewExchangeClient(cfg)
 
 	//middleware
