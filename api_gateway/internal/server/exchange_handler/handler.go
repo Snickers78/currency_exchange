@@ -1,11 +1,10 @@
 package handler
 
 import (
-	"api_gateway/infra/kafka"
 	"api_gateway/internal/exchange"
 	exchangev1 "api_gateway/internal/gen/exchange/proto"
 	"api_gateway/internal/middleware"
-	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,13 +12,13 @@ import (
 
 type Exchange struct {
 	exchangeClient *exchange.ExchangeClient
-	hook           *kafka.KafkaHook
+	logger         *slog.Logger
 }
 
-func NewExchangeHandler(router *gin.Engine, exchangeClient *exchange.ExchangeClient, hook *kafka.KafkaHook, secret string) {
+func NewExchangeHandler(router *gin.Engine, exchangeClient *exchange.ExchangeClient, logger *slog.Logger, secret string) {
 	handler := &Exchange{
 		exchangeClient: exchangeClient,
-		hook:           hook,
+		logger:         logger,
 	}
 
 	protected := router.Group("/exchange")
@@ -33,9 +32,7 @@ func (e *Exchange) GetExchangeRate(c *gin.Context) {
 	var req rateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logEntry := NewExchangeLog("error", "rate_invalid_request", WithBaseCurrency(req.BaseCurrency), WithTargetCurrency(req.TargetCurrency), WithExchangeError(err.Error()))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.hook.Fire(string(msg))
-		}
+		e.logger.Error("Error", "exchange", logEntry)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
@@ -46,17 +43,13 @@ func (e *Exchange) GetExchangeRate(c *gin.Context) {
 	})
 	if err != nil {
 		logEntry := NewExchangeLog("error", "rate_grpc_failed", WithBaseCurrency(req.BaseCurrency), WithTargetCurrency(req.TargetCurrency), WithExchangeError(err.Error()))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.hook.Fire(string(msg))
-		}
+		e.logger.Error("Error", "exchange", logEntry)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "get rate failed"})
 		return
 	}
 
 	logEntry := NewExchangeLog("info", "rate_success", WithBaseCurrency(req.BaseCurrency), WithTargetCurrency(req.TargetCurrency), WithRate(resp.Rate), WithCurrencyName(resp.CurrencyName))
-	if msg, err := json.Marshal(logEntry); err == nil {
-		e.hook.Fire(string(msg))
-	}
+	e.logger.Info("Success", "exchange", logEntry)
 
 	c.JSON(http.StatusOK, gin.H{
 		"currency_name": resp.CurrencyName,
@@ -69,9 +62,7 @@ func (e *Exchange) Exchange(c *gin.Context) {
 	var req exchangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logEntry := NewExchangeLog("error", "exchange_invalid_request", WithBaseCurrency(req.BaseCurrency), WithTargetCurrency(req.TargetCurrency), WithAmount(req.Amount), WithExchangeError(err.Error()))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.hook.Fire(string(msg))
-		}
+		e.logger.Error("Error", "exchange", logEntry)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
@@ -83,17 +74,13 @@ func (e *Exchange) Exchange(c *gin.Context) {
 	})
 	if err != nil {
 		logEntry := NewExchangeLog("error", "exchange_grpc_failed", WithBaseCurrency(req.BaseCurrency), WithTargetCurrency(req.TargetCurrency), WithAmount(req.Amount), WithExchangeError(err.Error()))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.hook.Fire(string(msg))
-		}
+		e.logger.Error("Error", "exchange", logEntry)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "exchange failed"})
 		return
 	}
 
 	logEntry := NewExchangeLog("info", "exchange_success", WithBaseCurrency(req.BaseCurrency), WithTargetCurrency(req.TargetCurrency), WithAmount(resp.Amount), WithCurrencyName(resp.Currency))
-	if msg, err := json.Marshal(logEntry); err == nil {
-		e.hook.Fire(string(msg))
-	}
+	e.logger.Info("Success", "exchange", logEntry)
 
 	c.JSON(http.StatusOK, gin.H{
 		"currency":  resp.Currency,

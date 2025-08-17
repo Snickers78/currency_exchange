@@ -72,9 +72,7 @@ func (e *Exchanger) GetExchangeRate(ctx context.Context, base_currency string, t
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		logEntry := logg.NewExchangeLog("error", "get_exchange_rate_failed", logg.WithBaseCurrency(base_currency), logg.WithTargetCurrency(target_currency), logg.WithExchangeError(e.SanitizeError(err)))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.logger.Error("error", "exchange_service", string(msg))
-		}
+		e.logger.Error("error", "exchange_service", logEntry)
 		metrics.ErrorCount.Inc()
 
 		return 0, time.Time{}, ErrInternalServer
@@ -83,10 +81,7 @@ func (e *Exchanger) GetExchangeRate(ctx context.Context, base_currency string, t
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		logEntry := logg.NewExchangeLog("error", "get_exchange_rate_failed", logg.WithBaseCurrency(base_currency), logg.WithTargetCurrency(target_currency), logg.WithExchangeError(e.SanitizeError(err)))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.logger.Error("error", "exchange_service", string(msg))
-
-		}
+		e.logger.Error("error", "exchange_service", logEntry)
 		metrics.ErrorCount.Inc()
 
 		return 0, time.Time{}, ErrInternalServer
@@ -96,9 +91,7 @@ func (e *Exchanger) GetExchangeRate(ctx context.Context, base_currency string, t
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logEntry := logg.NewExchangeLog("error", "get_exchange_rate_failed", logg.WithBaseCurrency(base_currency), logg.WithTargetCurrency(target_currency), logg.WithExchangeError(e.SanitizeError(err)))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.logger.Error("error", "exchange_service", string(msg))
-		}
+		e.logger.Error("error", "exchange_service", logEntry)
 		metrics.ErrorCount.Inc()
 
 		return 0, time.Time{}, ErrInternalServer
@@ -107,9 +100,7 @@ func (e *Exchanger) GetExchangeRate(ctx context.Context, base_currency string, t
 	var apiResp exchangeRateAPIResponse
 	if err := json.Unmarshal(body, &apiResp); err != nil {
 		logEntry := logg.NewExchangeLog("error", "get_exchange_rate_failed", logg.WithBaseCurrency(base_currency), logg.WithTargetCurrency(target_currency), logg.WithExchangeError(e.SanitizeError(err)))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.logger.Error("error", "exchange_service", string(msg))
-		}
+		e.logger.Error("error", "exchange_service", logEntry)
 		metrics.ErrorCount.Inc()
 
 		return 0, time.Time{}, ErrInternalServer
@@ -117,9 +108,7 @@ func (e *Exchanger) GetExchangeRate(ctx context.Context, base_currency string, t
 
 	if apiResp.Result == "error" {
 		logEntry := logg.NewExchangeLog("error", "get_exchange_rate_failed", logg.WithBaseCurrency(base_currency), logg.WithTargetCurrency(target_currency), logg.WithExchangeError(apiResp.ErrorType))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.logger.Error("error", "exchange_service", string(msg))
-		}
+		e.logger.Error("error", "exchange_service", logEntry)
 		metrics.ErrorCount.Inc()
 
 		switch apiResp.Result {
@@ -144,9 +133,7 @@ func (e *Exchanger) GetExchangeRate(ctx context.Context, base_currency string, t
 	rate, exists := apiResp.Rates[target]
 	if !exists {
 		logEntry := logg.NewExchangeLog("error", "get_exchange_rate_failed", logg.WithBaseCurrency(base_currency), logg.WithTargetCurrency(target_currency), logg.WithExchangeError("currency not found"))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.logger.Error("error", "exchange_service", string(msg))
-		}
+		e.logger.Error("error", "exchange_service", logEntry)
 		metrics.ErrorCount.Inc()
 
 		return 0, time.Time{}, ErrCurrencyNotFound
@@ -166,9 +153,7 @@ func (e *Exchanger) Exchange(ctx context.Context, base_currency string, target_c
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		logEntry := logg.NewExchangeLog("error", "exchange_failed", logg.WithBaseCurrency(base_currency), logg.WithTargetCurrency(target_currency), logg.WithAmount(amount), logg.WithExchangeError(e.SanitizeError(err)))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.logger.Error("error", "exchange_service", string(msg))
-		}
+		e.logger.Error("error", "exchange_service", logEntry)
 		metrics.ErrorCount.Inc()
 
 		return 0, time.Time{}, ErrInternalServer
@@ -177,9 +162,7 @@ func (e *Exchanger) Exchange(ctx context.Context, base_currency string, target_c
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		logEntry := logg.NewExchangeLog("error", "exchange_failed", logg.WithBaseCurrency(base_currency), logg.WithTargetCurrency(target_currency), logg.WithAmount(amount), logg.WithExchangeError(e.SanitizeError(err)))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.logger.Error("error", "exchange_service", string(msg))
-		}
+		e.logger.Error("error", "exchange_service", logEntry)
 		metrics.ErrorCount.Inc()
 
 		return 0, time.Time{}, ErrInternalServer
@@ -189,9 +172,7 @@ func (e *Exchanger) Exchange(ctx context.Context, base_currency string, target_c
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logEntry := logg.NewExchangeLog("error", "exchange_failed", logg.WithBaseCurrency(base_currency), logg.WithTargetCurrency(target_currency), logg.WithAmount(amount), logg.WithExchangeError(e.SanitizeError(err)))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.logger.Error("error", "exchange_service", string(msg))
-		}
+		e.logger.Error("error", "exchange_service", logEntry)
 		metrics.ErrorCount.Inc()
 
 		return 0, time.Time{}, ErrInternalServer
@@ -200,9 +181,7 @@ func (e *Exchanger) Exchange(ctx context.Context, base_currency string, target_c
 	var apiResp exchangeCurrencyAPIResponse
 	if err := json.Unmarshal(body, &apiResp); err != nil {
 		logEntry := logg.NewExchangeLog("error", "exchange_failed", logg.WithBaseCurrency(base_currency), logg.WithTargetCurrency(target_currency), logg.WithAmount(amount), logg.WithExchangeError(e.SanitizeError(err)))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.logger.Error("error", "exchange_service", string(msg))
-		}
+		e.logger.Error("error", "exchange_service", logEntry)
 		metrics.ErrorCount.Inc()
 
 		return 0, time.Time{}, ErrInternalServer
@@ -210,9 +189,7 @@ func (e *Exchanger) Exchange(ctx context.Context, base_currency string, target_c
 
 	if apiResp.Result == "error" {
 		logEntry := logg.NewExchangeLog("error", "exchange_failed", logg.WithBaseCurrency(base_currency), logg.WithTargetCurrency(target_currency), logg.WithAmount(amount), logg.WithExchangeError(apiResp.ErrorType))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			e.logger.Error("error", "exchange_service", string(msg))
-		}
+		e.logger.Error("error", "exchange_service", logEntry)
 		metrics.ErrorCount.Inc()
 
 		switch apiResp.Result {

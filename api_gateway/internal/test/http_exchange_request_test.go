@@ -1,7 +1,7 @@
 package test
 
 import (
-	"api_gateway/infra/kafka"
+	"api_gateway/internal/lib/logger"
 	handler "api_gateway/internal/server/exchange_handler"
 	test "api_gateway/internal/test/suites"
 	"encoding/json"
@@ -25,10 +25,10 @@ type ExchangeRateResponse struct {
 func TestHttpRequestExchangeRate(t *testing.T) {
 	ctx, s := test.NewExchangeSuite(t)
 	router := gin.Default()
-	hook := kafka.NewKafkaHook([]string{"localhost:9093"}, "test")
+	log := logger.InitLogger("local")
 	reqBody := `{"base_currency": "USD", "target_currency": "RUB"}`
 
-	handler.NewExchangeHandler(router, s.Client, hook, s.Cfg.Secret)
+	handler.NewExchangeHandler(router, s.Client, log, s.Cfg.Secret)
 
 	server := httptest.NewServer(router)
 	defer server.Close()
@@ -64,10 +64,10 @@ func TestHttpRequestExchangeRate(t *testing.T) {
 func TestHttpRequestExchange(t *testing.T) {
 	ctx, s := test.NewExchangeSuite(t)
 	router := gin.Default()
-	hook := kafka.NewKafkaHook([]string{"localhost:9093"}, "test")
+	log := logger.InitLogger("local")
 	reqBody := `{"base_currency": "USD", "target_currency": "RUB", "amount": 123}`
 
-	handler.NewExchangeHandler(router, s.Client, hook, s.Cfg.Secret)
+	handler.NewExchangeHandler(router, s.Client, log, s.Cfg.Secret)
 
 	server := httptest.NewServer(router)
 	defer server.Close()

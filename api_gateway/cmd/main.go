@@ -1,10 +1,10 @@
 package main
 
 import (
-	"api_gateway/infra/kafka"
 	"api_gateway/internal/auth"
 	"api_gateway/internal/config"
 	"api_gateway/internal/exchange"
+	"api_gateway/internal/lib/logger"
 	"api_gateway/internal/middleware"
 	authHandler "api_gateway/internal/server/auth_handler"
 	exchangeHandler "api_gateway/internal/server/exchange_handler"
@@ -12,7 +12,6 @@ import (
 	"time"
 
 	//"context"
-	"log"
 	"strconv"
 
 	//"time"
@@ -23,11 +22,11 @@ import (
 )
 
 const (
-	// EnvLocal = "local"
-	// EnvDev   = "dev"
-	// EnvProd  = "prod"
-	topic = "logs"
-	App   = false
+	EnvLocal = "local"
+	EnvDev   = "dev"
+	EnvProd  = "prod"
+	topic    = "logs"
+	App      = false
 )
 
 var (
@@ -39,8 +38,8 @@ func main() {
 	rateLimiter := middleware.NewBucketLimiter(context.Background(), 100, 1*time.Second)
 	router := gin.Default()
 	cfg := config.LoadConfig(App)
-	// log := logger.InitLogger(EnvLocal)
-	kafkaHook := kafka.NewKafkaHook(brokers, topic)
+	log := logger.InitLogger(EnvLocal)
+	//kafkaHook := kafka.NewKafkaHook(brokers, topic)
 
 	//clients
 	authClient := auth.NewAuthClient(cfg)
@@ -51,10 +50,10 @@ func main() {
 	router.Use(middleware.RateLimitMiddleware(rateLimiter))
 
 	//handlers
-	authHandler.NewAuthHandler(router, authClient, kafkaHook, cfg.Secret)
-	exchangeHandler.NewExchangeHandler(router, exchangeClient, kafkaHook, cfg.Secret)
+	authHandler.NewAuthHandler(router, authClient, log, cfg.Secret)
+	exchangeHandler.NewExchangeHandler(router, exchangeClient, log, cfg.Secret)
 
 	if err := router.Run(":" + strconv.Itoa(cfg.GatewayPort)); err != nil {
-		log.Fatal("Failed to start server", "err", err)
+		log.Error("Error starting Server", "error", err)
 	}
 }

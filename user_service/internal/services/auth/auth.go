@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"time"
@@ -46,24 +45,18 @@ func (a *Auth) Login(ctx context.Context, email, password string) (string, error
 	if err != nil {
 		if errors.Is(err, errs.UserNotFound) {
 			logEntry := logger.NewAuthLog("error", "login_wrong_credentials", logger.WithAuthEmail(email), logger.WithAuthError(errs.WrongCredentials.Error()))
-			if msg, err := json.Marshal(logEntry); err == nil {
-				a.logger.Error("error", "auth_service", string(msg))
-			}
+			a.logger.Error("error", "auth_service", logEntry)
 			metrics.ErrorCount.Inc()
 			return "", errs.WrongCredentials
 		}
 		logEntry := logger.NewAuthLog("error", "login_get_user_failed", logger.WithAuthEmail(email), logger.WithAuthError(err.Error()))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			a.logger.Error("error", "auth_service", string(msg))
-		}
+		a.logger.Error("error", "auth_service", logEntry)
 		return "", errs.BadRequest
 	}
 
 	if err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(password)); err != nil {
 		logEntry := logger.NewAuthLog("error", "login_wrong_credentials", logger.WithAuthEmail(email), logger.WithAuthError(errs.WrongCredentials.Error()))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			a.logger.Error("error", "auth_service", string(msg))
-		}
+		a.logger.Error("error", "auth_service", logEntry)
 		metrics.ErrorCount.Inc()
 		return "", errs.WrongCredentials
 	}
@@ -71,9 +64,7 @@ func (a *Auth) Login(ctx context.Context, email, password string) (string, error
 	token, err := jwt.NewToken(user, a.tokenTTL, a.config.Secret)
 	if err != nil {
 		logEntry := logger.NewAuthLog("error", "login_token_failed", logger.WithAuthEmail(email), logger.WithAuthError(err.Error()))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			a.logger.Error("error", "auth_service", string(msg))
-		}
+		a.logger.Error("error", "auth_service", logEntry)
 		metrics.ErrorCount.Inc()
 		return "", errs.InternalError
 	}
@@ -91,26 +82,20 @@ func (a *Auth) Register(ctx context.Context, email, password string) (int64, err
 	if err != nil {
 		if !errors.Is(err, errs.UserNotFound) {
 			logEntry := logger.NewAuthLog("error", "register_check_user_failed", logger.WithAuthEmail(email), logger.WithAuthError(err.Error()))
-			if msg, err := json.Marshal(logEntry); err == nil {
-				a.logger.Error("error", "auth_service", string(msg))
-			}
+			a.logger.Error("error", "auth_service", logEntry)
 			metrics.ErrorCount.Inc()
 			return 0, err
 		}
 	} else if user != nil {
 		logEntry := logger.NewAuthLog("error", "register_user_exists", logger.WithAuthEmail(email), logger.WithAuthError(errs.UserAlreadyExists.Error()))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			a.logger.Error("error", "auth_service", string(msg))
-		}
+		a.logger.Error("error", "auth_service", logEntry)
 		return 0, errs.UserAlreadyExists
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		logEntry := logger.NewAuthLog("error", "register_hash_failed", logger.WithAuthEmail(email), logger.WithAuthError(err.Error()))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			a.logger.Error("error", "auth_service", string(msg))
-		}
+		a.logger.Error("error", "auth_service", logEntry)
 		metrics.ErrorCount.Inc()
 		return 0, err
 	}
@@ -118,9 +103,7 @@ func (a *Auth) Register(ctx context.Context, email, password string) (int64, err
 	uid, err := a.storage.CreateUser(ctx, email, hash)
 	if err != nil {
 		logEntry := logger.NewAuthLog("error", "register_create_user_failed", logger.WithAuthEmail(email), logger.WithAuthError(err.Error()))
-		if msg, err := json.Marshal(logEntry); err == nil {
-			a.logger.Error("error", "auth_service", string(msg))
-		}
+		a.logger.Error("error", "auth_service", logEntry)
 		metrics.ErrorCount.Inc()
 		return 0, err
 	}
