@@ -9,6 +9,8 @@ import (
 	authHandler "api_gateway/internal/server/auth_handler"
 	exchangeHandler "api_gateway/internal/server/exchange_handler"
 	"context"
+	"net/http"
+	_ "net/http/pprof"
 	"time"
 
 	//"context"
@@ -52,6 +54,10 @@ func main() {
 	//handlers
 	authHandler.NewAuthHandler(router, authClient, log, cfg.Secret)
 	exchangeHandler.NewExchangeHandler(router, exchangeClient, log, cfg.Secret)
+
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
 
 	if err := router.Run(":" + strconv.Itoa(cfg.GatewayPort)); err != nil {
 		log.Error("Error starting Server", "error", err)

@@ -2,9 +2,9 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 export let options = {
-    vus: 100, // Количество виртуальных пользователей (подберите под вашу инфраструктуру)
+    vus: 2, // Количество виртуальных пользователей (подберите под вашу инфраструктуру)
     duration: '3600s', // Длительность теста
-    rps: 200, // Ограничение по RPS
+    rps: 20, // Ограничение по RPS
 };
 
 const BASE_URL = 'http://localhost:1337'; // Замените на реальный адрес exchange_service
@@ -24,6 +24,7 @@ export default function () {
     const params = {
         headers: {
             'Content-Type': 'application/json',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRzdEBnZ21haWwuY29tIiwiZXhwIjoxNzU1OTM2MzE1LCJpZCI6M30.CNAA5M4DzsTfy6UtsXvcV5CMBkvWcm3gACbvW9uns7U'
         },
     };
 

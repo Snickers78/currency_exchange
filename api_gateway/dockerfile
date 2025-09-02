@@ -1,0 +1,15 @@
+FROM golang:1.23.2-alpine
+
+WORKDIR /api_gateway
+
+COPY go.mod ./
+
+RUN go mod download
+
+COPY . .
+
+RUN go build -o api-gateway ./cmd/main.go
+
+EXPOSE 1337
+
+CMD ["./api-gateway"]

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exchange-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: exchange-service
+  template:
+    metadata:
+      labels:
+        app: exchange-service
+    spec:
+      containers:
+      - name: exchange-service
+        image: exchange-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 50052      
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: exchange-service
+spec:
+  selector:
+    app: exchange-service
+  ports:
+  - name: metrics
+    port: 9200
+    targetPort: 9200
+    protocol: TCP
+  - name: grpc
+    port: 50052          
+    targetPort: 50052    
+    protocol: TCP
+  type: ClusterIP

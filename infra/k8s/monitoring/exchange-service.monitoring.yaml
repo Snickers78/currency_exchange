@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: exchange-service-monitor
+  namespace: monitoring 
+spec:
+  selector:
+    matchLabels:
+      app: exchange-service 
+  endpoints:
+  - port: metrics 
+    path: /metrics
+    interval: 15s
+    scheme: http 

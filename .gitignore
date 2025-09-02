@@ -3,7 +3,8 @@ exchange_service/config/.env
 api_gateway/config/.env
 .vscode/
 exchange_service/logs.txt
-infra/api_gateway_kafka_graylog/connect-plugins
-infra/api_gateway_kafka_graylog/data
 user_service/logs.txt
+api_gateway/logs.txt
+infra/logs/connect-plugins
+infra/logs/data
 user_service/storage/postgres-data
