@@ -8,3 +8,4 @@ api_gateway/logs.txt
 infra/logs/connect-plugins
 infra/logs/data
 user_service/storage/postgres-data
+k6_load_test.js
